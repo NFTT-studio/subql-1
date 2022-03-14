@@ -5,7 +5,8 @@ import assert from 'assert';
 import fs from 'fs';
 import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ApiPromise } from '@polkadot/api';
+import { handleBlock, handleCall, handleEvent } from '@nftmart/subql';
+import { ApiPromise, Keyring } from '@polkadot/api';
 import { hexToU8a, u8aEq } from '@polkadot/util';
 import { getAllEntitiesRelations } from '@subql/common';
 import {
@@ -24,6 +25,7 @@ import {
   SubqlHandlerKind,
   SubqlNetworkFilter,
   SubqlRuntimeHandler,
+  setGlobal,
 } from '@subql/types';
 import { QueryTypes, Sequelize, Transaction } from 'sequelize';
 import { NodeConfig } from '../configure/NodeConfig';
@@ -176,6 +178,19 @@ export class IndexerManager {
     }
   }
 
+  injectGlobal() {
+    const keyring = new Keyring({ type: 'sr25519', ss58Format: 12191 });
+    const store = this.storeService.getStore();
+    const logger = getLogger('nftmart');
+    setGlobal({
+      patchedApi: this.api,
+      api: this.api,
+      keyring: keyring,
+      store: store,
+      logger: logger,
+    });
+  }
+
   async start(): Promise<void> {
     await this.dsProcessorService.validateProjectCustomDatasources();
     await this.fetchService.init();
@@ -191,6 +206,8 @@ export class IndexerManager {
         this.mmrService.init(schema),
       ]);
     }
+
+    this.injectGlobal();
 
     let startHeight: number;
     const lastProcessedHeight = await this.metadataRepo.findOne({
@@ -465,7 +482,7 @@ export class IndexerManager {
       switch (handler.kind) {
         case SubqlHandlerKind.Block:
           if (SubstrateUtil.filterBlock(block, handler.filter)) {
-            await vm.securedExec(handler.handler, [block]);
+            await handleBlock(block);
           }
           break;
         case SubqlHandlerKind.Call: {
@@ -474,7 +491,7 @@ export class IndexerManager {
             handler.filter,
           );
           for (const e of filteredExtrinsics) {
-            await vm.securedExec(handler.handler, [e]);
+            await handleCall(e);
           }
           break;
         }
@@ -484,7 +501,7 @@ export class IndexerManager {
             handler.filter,
           );
           for (const e of filteredEvents) {
-            await vm.securedExec(handler.handler, [e]);
+            await handleEvent(e);
           }
           break;
         }
