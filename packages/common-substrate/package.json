@@ -13,7 +13,7 @@
   "main": "dist/index.js",
   "license": "Apache-2.0",
   "dependencies": {
-    "@polkadot/util": "^8",
+    "@polkadot/util": "latest",
     "@subql/common": "workspace:*",
     "@subql/types": "workspace:*",
     "bn.js": "4.11.6",
