@@ -8,6 +8,7 @@
     "prebuild": "rimraf dist",
     "build": "rm -rf dist && tsc -b",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "dev": "ts-node-dev --respawn --transpile-only src/main.ts -f ../nftmart",
     "start": "nest start",
     "start:dev": "nodemon",
     "start:prod": "node dist/main"
@@ -60,7 +61,8 @@
     "@types/yargs": "^16.0.4",
     "dotenv": "^15.0.1",
     "nodemon": "^2.0.15",
-    "supertest": "^6.2.2"
+    "supertest": "^6.2.2",
+    "ts-node-dev": "^1.1.8"
   },
   "files": [
     "/dist",
