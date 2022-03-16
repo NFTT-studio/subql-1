@@ -135,6 +135,19 @@ export function getYargsOption() {
       describe: 'The port the service will bind to',
       type: 'number',
     },
+    'follow-latest-block': {
+      demandOption: false,
+      describe:
+        'Set startBlock to current latest block (for development purpose only)',
+      type: 'boolean',
+      default: false,
+    },
+    'start-block': {
+      demandOption: false,
+      describe: 'Set startBlock to given value',
+      type: 'number',
+      default: 0,
+    },
   });
 }
 

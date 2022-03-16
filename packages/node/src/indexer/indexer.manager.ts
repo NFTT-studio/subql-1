@@ -191,6 +191,29 @@ export class IndexerManager {
     });
   }
 
+  async nextBlockHeight(): Promise<number> {
+    const lastProcessedHeight = await this.metadataRepo.findOne({
+      where: { key: 'lastProcessedHeight' },
+    });
+    return lastProcessedHeight !== null && lastProcessedHeight.value !== null
+      ? Number(lastProcessedHeight.value) + 1
+      : 1;
+  }
+
+  async startHeight(): Promise<number> {
+    const latestBlock = await this.api.rpc.chain.getBlock();
+    const latestBlockHeight = latestBlock.block.header.number.toNumber();
+    const nextBlockHeight = await this.nextBlockHeight();
+    const followLatestBlock = this.nodeConfig.followLatestBlock;
+    const startBlock = this.nodeConfig.startBlock;
+
+    return startBlock !== 0
+      ? startBlock
+      : followLatestBlock
+      ? latestBlockHeight
+      : nextBlockHeight;
+  }
+
   async start(): Promise<void> {
     await this.dsProcessorService.validateProjectCustomDatasources();
     await this.fetchService.init();
@@ -209,22 +232,7 @@ export class IndexerManager {
 
     this.injectGlobal();
 
-    let startHeight: number;
-    const lastProcessedHeight = await this.metadataRepo.findOne({
-      where: { key: 'lastProcessedHeight' },
-    });
-    if (lastProcessedHeight !== null && lastProcessedHeight.value !== null) {
-      startHeight = Number(lastProcessedHeight.value) + 1;
-    } else {
-      const project = await this.subqueryRepo.findOne({
-        where: { name: this.nodeConfig.subqueryName },
-      });
-      if (project !== null) {
-        startHeight = project.nextBlockHeight;
-      } else {
-        startHeight = this.getStartBlockFromDataSources();
-      }
-    }
+    const startHeight: number = await this.startHeight();
 
     void this.fetchService.startLoop(startHeight).catch((err) => {
       logger.error(err, 'failed to fetch block');

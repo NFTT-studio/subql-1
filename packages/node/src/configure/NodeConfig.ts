@@ -31,6 +31,8 @@ export interface IConfig {
   readonly proofOfIndex: boolean;
   readonly mmrPath?: string;
   readonly ipfs?: string;
+  readonly followLatestBlock: boolean;
+  readonly startBlock: number;
 }
 
 export type MinConfig = Partial<Omit<IConfig, 'subquery'>> &
@@ -46,6 +48,8 @@ const DEFAULT_CONFIG = {
   indexCountLimit: 10,
   timestampField: true,
   proofOfIndex: false,
+  followLatestBlock: false,
+  startBlock: 0,
 };
 
 export class NodeConfig implements IConfig {
@@ -144,6 +148,14 @@ export class NodeConfig implements IConfig {
 
   get dbSchema(): string {
     return this._config.dbSchema ?? this.subqueryName;
+  }
+
+  get followLatestBlock(): boolean {
+    return this._config.followLatestBlock;
+  }
+
+  get startBlock(): number {
+    return this._config.startBlock;
   }
 
   merge(config: Partial<IConfig>): this {
