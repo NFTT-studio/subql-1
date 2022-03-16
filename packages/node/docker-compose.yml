@@ -2,10 +2,18 @@ version: '3'
 
 services:
   postgres:
-    image: postgres:12-alpine
+    image: postgres:14-bullseye
     ports:
       - 5432:5432
     volumes:
       - .data/postgres:/var/lib/postgresql/data
     environment:
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: nftmart
+  adminer:
+    image: adminer
+    environment:
+      ADMINER_DEFAULT_DB_DRIVER: pgsql
+      ADMINER_DEFAULT_DB_HOST: postgres
+      ADMINER_DEFAULT_DB_NAME: postgres
+    ports:
+      - 8090:8080
